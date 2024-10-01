@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundraiser Search</title>
+    <style>
+        body {
+            font-family: 'Verdana', sans-serif;
+            margin: 20px;
+            background-color: #e0f7e0;
+            text-align: center;
+        }
+        header {
+            margin-bottom: 20px;
+            background-color: #398e39;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        nav a {
+            margin-right: 15px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            display: inline-block;
+            width: 90%;
+            max-width: 800px;
+        }
+        form {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        label {
+            flex: 1;
+            margin-right: 10px;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Find Your Fundraiser</h1>
+    <nav>
+        <a href="index.html">Homepage</a>
+        <a href="search.html">Search Fundraisers</a>
+    </nav>
+</header>
+
+<section>
+    <form id="searchFundraiserForm">
+        <label>Organizer:
+            <input type="text" id="organizerName" placeholder="Enter organizer's name">
+        </label>
+        <label>City:
+            <input type="text" id="cityName" placeholder="Enter city">
+        </label>
+        <label>Category:
+            <select id="fundraiserCategory">
+                <option value="">Choose a category</option>
+                <option value="Sport">Sport</option>
+                <option value="Cultural Heritage">Cultural Heritage</option>
+                <option value="Public Health">Public Health</option>
+                <option value="Renewable Energy">Renewable Energy</option>
+                <option value="Social Justice">Social Justice</option>
+            </select>
+        </label>
+        <button type="submit">Search</button>
+        <button type="button" onclick="clearInputs()">Clear</button>
+    </form>
+    <div id="results"></div>
+</section>
+
+<script>
+    document.getElementById('searchFundraiserForm').onsubmit = function(event) {
+        event.preventDefault(); // Prevent form submission refresh
+
+        // Collect form data
+        const organizer = document.getElementById('organizerName').value.trim();
+        const city = document.getElementById('cityName').value.trim();
+        const category = document.getElementById('fundraiserCategory').value;
+
+        // Ensure at least one search criterion is provided
+        if (!organizer && !city && !category) {
+            return alert("Please enter at least one search criterion!");
+        }
+
+        // Form the query string for the search
+        const query = new URLSearchParams({ organizer, city, category }).toString();
+
+        // Fetch data from the backend with the search query
+        fetch(`http://localhost:4300/search?${query}`)
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('results');
+                if (data.length) {
+                    // Display results in a table
+                    resultsDiv.innerHTML = `<table>
+                        <thead>
+                            <tr>
+                                <th>Caption</th>
+                                <th>Organizer</th>
+                                <th>Category</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>${data.map(fundraiser => `
+                            <tr>
+                                <td>${fundraiser.CAPTION}</td>
+                                <td>${fundraiser.ORGANIZER}</td>
+                                <td><a href="fundraiser.html?id=${fundraiser.FUNDRAISER_ID}">View More</a></td>
+                            </tr>`).join('')}</tbody>
+                    </table>`;
+                } else {
+                    // If no fundraisers are found
+                    resultsDiv.innerHTML = '<strong style="color:red;">No fundraisers matched your search</strong>';
+                }
+            })
+            .catch(err => console.error('Error while fetching:', err)); // Handle any errors during fetch
+    };
+
+    // Function to clear input fields
+    function clearInputs() {
+        document.getElementById('organizerName').value = '';
+        document.getElementById('cityName').value = '';
+        document.getElementById('fundraiserCategory').value = '';
+    }
+</script>
+</body>
+</html>
